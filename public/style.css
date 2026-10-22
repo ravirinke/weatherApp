@@ -1,30 +1,17 @@
+/* Farger og typografi fra Figma-designet «Bekkværet». */
 :root {
-  --sky1: #1d4560;
-  --sky2: #0f2533;
-  --water1: rgba(120, 190, 220, .16);
-  --water2: rgba(120, 190, 220, .10);
-  --ink: #eef4f8;
-  --muted: rgba(238, 244, 248, .66);
-  --card: rgba(255, 255, 255, .07);
-  --card-border: rgba(255, 255, 255, .12);
-  --accent: #9fd3e6;
-  --rain-1: #8ccbee;
-  --rain-2: #3d9ad6;
-  --rain-3: #1f5fae;
-  --warm: #f6c453;
-  --cold: #9fd3e6;
-  --radius: 22px;
-  --display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --natt: #1f1f1f;
+  --dag: #f8f8f8;
+  --rebell: #d4ff26;
+  --graf: #aacc1e;          /* Rebell med 20 % svart, som i designet */
+  --kort: #333;
+  --muted: #b7b7b7;
+  --radius: 12px;
+  --gutter: clamp(16px, 5vw, 87px);
+  --brand: "GT America", Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color-scheme: dark;
 }
-
-body[data-theme="clear"]  { --sky1: #2b6d96; --sky2: #12354d; }
-body[data-theme="night"]  { --sky1: #1a2a4a; --sky2: #080f1e; }
-body[data-theme="cloudy"] { --sky1: #3d5463; --sky2: #18252e; }
-body[data-theme="rain"]   { --sky1: #2c4a5e; --sky2: #0e1d28; }
-body[data-theme="snow"]   { --sky1: #5b7387; --sky2: #24323e; }
-body[data-theme="storm"]  { --sky1: #2d2f48; --sky2: #0d0e1a; }
 
 * { box-sizing: border-box; }
 
@@ -32,44 +19,37 @@ html, body { margin: 0; min-height: 100%; }
 
 body {
   font-family: var(--sans);
-  color: var(--ink);
-  background: linear-gradient(170deg, var(--sky1) 0%, var(--sky2) 75%);
-  background-attachment: fixed;
-  transition: background 1.2s ease;
+  color: var(--dag);
+  background: var(--natt);
   -webkit-font-smoothing: antialiased;
-  line-height: 1.45;
+  line-height: normal;
 }
 
-.backdrop {
-  position: fixed;
-  inset: auto 0 0 0;
-  height: 42vh;
-  pointer-events: none;
-  z-index: 0;
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
-.stream { position: absolute; left: -5%; width: 110%; height: 100%; }
-.stream path:first-child { fill: var(--water2); animation: drift 14s ease-in-out infinite alternate; }
-.stream path:last-child  { fill: var(--water1); animation: drift 10s ease-in-out infinite alternate-reverse; }
-@keyframes drift { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
 
 .app {
-  position: relative;
-  z-index: 1;
-  max-width: 880px;
+  max-width: calc(1550px + 2 * var(--gutter));
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: clamp(20px, 3.8vw, 65px) var(--gutter) 40px;
   display: grid;
-  gap: 18px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 769fr) minmax(0, 781fr);
+  column-gap: 32px;
   grid-template-areas:
     "top top"
     "now nowcast"
     "week week"
     "error error"
     "foot foot";
-  transition: opacity .25s ease;
 }
-body.loading .card { opacity: .6; }
+body.loading .now,
+body.loading .card,
+body.loading .day { opacity: .6; }
 
 .topbar   { grid-area: top; }
 .now      { grid-area: now; }
@@ -83,272 +63,206 @@ body.loading .card { opacity: .6; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 16px 35px;
   flex-wrap: wrap;
-  padding: 4px 2px 6px;
+  font: 400 28px var(--brand);
 }
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--accent);
-  text-decoration: none;
-}
-.brand svg { width: 34px; height: 34px; }
-.brand span {
-  font-family: var(--display);
-  font-size: 1.65rem;
-  font-weight: 600;
-  letter-spacing: .01em;
-  color: var(--ink);
-}
+.brand { color: var(--dag); text-decoration: none; }
 
-.switch {
-  position: relative;
-  display: grid;
-  /* --n (antall byer) og --i (valgt by) settes fra main.js. */
-  grid-template-columns: repeat(var(--n, 2), 1fr);
-  min-height: 46px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, .22);
-  border: 1px solid var(--card-border);
-}
+.switch { display: flex; gap: 35px; }
 .switch button {
-  position: relative;
-  z-index: 1;
   appearance: none;
   border: 0;
+  padding: 0;
   background: none;
-  color: var(--muted);
-  font: 600 .95rem var(--sans);
-  padding: 9px 20px;
-  min-width: 112px;
-  border-radius: 999px;
+  color: var(--dag);
+  font: inherit;
   cursor: pointer;
-  transition: color .2s ease;
+  text-underline-position: from-font;
 }
-.switch button[aria-checked="true"] { color: #0f2533; }
-.switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.switch-thumb {
-  position: absolute;
-  top: 4px; bottom: 4px; left: 4px;
-  width: calc((100% - 8px) / var(--n, 2));
-  border-radius: 999px;
-  background: var(--ink);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
-  transform: translateX(calc(100% * var(--i, 0)));
-  transition: transform .3s cubic-bezier(.3, .7, .2, 1);
-}
-
-/* ---------- Kort ---------- */
-.card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: 22px 24px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, .18);
-  transition: opacity .25s ease;
-}
-
-h1, h2 { margin: 0; font-weight: 600; }
-h1 { font-size: 1.05rem; letter-spacing: .01em; }
-h2 { font-size: 1.05rem; }
-.muted { color: var(--muted); margin: 2px 0 0; }
-.small { font-size: .82rem; }
-
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.switch button:hover,
+.switch button[aria-checked="true"] { text-decoration: underline; }
+.switch button:focus-visible,
+.brand:focus-visible { outline: 2px solid var(--rebell); outline-offset: 4px; border-radius: 2px; }
 
 /* ---------- Nå ---------- */
-.now-head .muted { font-size: .85rem; }
-.now-main {
+.now {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin: 10px 0 16px;
+  gap: 38px;
+  margin-top: clamp(32px, 8.5vw, 146px);
 }
 .now-icon .wx-icon { width: 108px; height: 108px; display: block; }
+.now-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .now-temp {
-  font-family: var(--display);
-  font-size: 5rem;
-  line-height: 1;
   margin: 0;
+  font-size: 108px;
   font-weight: 500;
+  line-height: 1.21;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -.02em;
+  white-space: nowrap;
 }
-.now-temp .deg { color: var(--accent); font-size: .42em; vertical-align: .95em; white-space: pre; }
-.now-cond { margin: 6px 0 0; font-size: 1.1rem; color: var(--ink); }
-
-.now-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 18px;
-  margin: 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--card-border);
-}
-.now-details dt { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.now-details dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-.now-details .sub { display: block; font-weight: 400; font-size: .82rem; color: var(--muted); }
-.wind-arrow {
-  display: inline-block;
-  transform: rotate(var(--deg));
-  color: var(--accent);
-  font-weight: 700;
-}
+.now-cond { margin: 0; font-size: 28px; color: var(--muted); }
 
 /* ---------- Nedbør neste time ---------- */
-.nowcast { display: flex; flex-direction: column; }
-.nowcast-summary {
-  font-family: var(--display);
-  font-size: 1.35rem;
-  line-height: 1.3;
-  margin: 14px 0 18px;
+.card {
+  background: var(--kort);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
-.chart {
+.nowcast {
+  display: flex;
+  flex-direction: column;
+  min-height: 270px;
+  margin-top: clamp(24px, 8.4vw, 146px);
+  align-self: center;
+}
+.nowcast-head {
   flex: 1;
-  min-height: 130px;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 4px;
-  align-items: end;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--card-border);
-  background:
-    linear-gradient(to top, transparent calc(50% - 1px), rgba(255,255,255,.06) calc(50% - 1px), rgba(255,255,255,.06) 50%, transparent 50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px;
+  font-size: 22px;
 }
-.chart.empty { min-height: 40px; }
-.bar { height: 100%; display: flex; align-items: flex-end; }
-.bar span {
-  display: block;
-  width: 100%;
-  min-height: 3px;
-  border-radius: 6px 6px 2px 2px;
-  background: rgba(255, 255, 255, .12);
-  transition: height .5s ease;
-}
-.bar.lv0 span { height: 3px !important; }
-.bar.lv1 span { background: var(--rain-1); }
-.bar.lv2 span { background: var(--rain-2); }
-.bar.lv3 span { background: var(--rain-3); }
+.nowcast-head h2 { margin: 0; font-size: inherit; font-weight: 400; }
+.muted { margin: 8px 0 0; color: var(--muted); }
+.nowcast-icon .wx-icon { width: 58px; height: 58px; display: block; }
 
+.chart { position: relative; height: 150px; }
+.chart svg { display: block; width: 100%; height: 100%; }
+.grid { position: absolute; inset: 0; pointer-events: none; }
+.gridline {
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 1px dashed rgba(248, 248, 248, .35);
+}
+.gridline span {
+  position: absolute;
+  right: 12px;
+  bottom: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(31, 31, 31, .7);
+  color: var(--dag);
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.chart path { fill: var(--graf); transition: d .5s ease; }
 .chart-axis {
   display: flex;
   justify-content: space-between;
-  font-size: .75rem;
-  color: var(--muted);
-  margin-top: 6px;
-  font-variant-numeric: tabular-nums;
-}
-.legend {
-  display: flex;
-  gap: 14px;
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 0;
-  font-size: .78rem;
+  padding: 8px 28px 12px;
+  font-size: 14px;
   color: var(--muted);
 }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.legend .lv1 { background: var(--rain-1); }
-.legend .lv2 { background: var(--rain-2); }
-.legend .lv3 { background: var(--rain-3); }
+/* Opphold: ingen graf, kortet krymper til overskriften. */
+.nowcast.dry { min-height: 0; }
+.nowcast.dry .chart,
+.nowcast.dry .chart-axis { display: none; }
 
 /* ---------- 7 dager ---------- */
-.days { list-style: none; margin: 10px 0 0; padding: 0; }
-.day {
+.week { margin-top: clamp(32px, 9.2vw, 159px); }
+.days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: minmax(120px, 1.4fr) 52px 112px 52px minmax(200px, 2.4fr);
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--card-border);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 32px;
 }
-.day:first-child { border-top: 0; }
-.day-name strong { display: block; font-weight: 600; }
-.day-name span { font-size: .8rem; color: var(--muted); }
-.day-icon .wx-icon { width: 46px; height: 46px; display: block; }
-.day-precip { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .92rem; }
-.day-precip.wet { color: var(--rain-1); font-weight: 600; }
-.day-wind { color: var(--muted); font-size: .92rem; font-variant-numeric: tabular-nums; }
-.day-temps {
-  display: grid;
-  grid-template-columns: 3.4em 1fr 3.4em;
+.day {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 28px;
+  padding: 38px 12px;
+  background: var(--kort);
+  border-radius: var(--radius);
+  font-family: var(--brand);
   font-variant-numeric: tabular-nums;
 }
-.t-min { color: var(--muted); text-align: right; white-space: nowrap; }
-.day-precip { white-space: nowrap; }
-.t-max { font-weight: 700; white-space: nowrap; }
-.t-max.cold { color: var(--cold); }
-.range {
-  position: relative;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .1);
-}
-.range i {
-  position: absolute;
-  top: 0; bottom: 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--cold), var(--warm));
-}
+.day-date { font-size: 28px; }
+.day-icon .wx-icon { width: 78px; height: 78px; display: block; }
+.day-temp { font-size: 48px; white-space: nowrap; }
 
 /* ---------- Diverse ---------- */
 .error {
-  margin: 0;
+  margin: 32px 0 0;
   padding: 12px 16px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(220, 80, 80, .2);
   border: 1px solid rgba(255, 140, 140, .35);
 }
 .footer {
-  font-size: .8rem;
+  margin-top: clamp(40px, 4.9vw, 85px);
+  font: 400 18px var(--brand);
   color: var(--muted);
   text-align: center;
-  padding-top: 8px;
 }
-.footer a { color: var(--accent); }
+.footer a { color: inherit; }
 
-.wx-icon { overflow: visible; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .18)); }
+.wx-icon { overflow: visible; }
 
-@media (max-width: 760px) {
+/* Smalere PC-vinduer: dagskortene krymper. */
+@media (max-width: 1280px) {
+  .days { gap: 16px; }
+  .day { gap: 20px; padding: 28px 8px; }
+  .day-date { font-size: 22px; }
+  .day-icon .wx-icon { width: 60px; height: 60px; }
+  .day-temp { font-size: 34px; }
+  .now-temp { font-size: 88px; }
+  .now-icon .wx-icon { width: 92px; height: 92px; }
+  .now { gap: 28px; }
+}
+
+@media (max-width: 900px) {
   .app {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "top" "now" "nowcast" "week" "error" "foot";
-    padding: 16px 14px 32px;
-    gap: 14px;
   }
-  .card { padding: 18px; }
-  .switch { width: 100%; }
-  .switch button { min-width: 0; }
-  .now-temp { font-size: 4.2rem; }
-  .now-icon .wx-icon { width: 92px; height: 92px; }
-  /* Mobil: nedbør under datoen, så navn og temperatur får plass. */
-  .day {
-    grid-template-columns: minmax(0, 1fr) 38px 136px;
-    grid-template-areas: "name icon temps" "precip icon temps";
-    gap: 2px 10px;
+  .topbar { font-size: 22px; }
+  .switch { gap: 22px; }
+}
+
+@media (max-width: 420px) {
+  .topbar { font-size: 18px; gap: 12px 16px; }
+  .switch { gap: 16px; }
+}
+
+@media (max-width: 900px) {
+  .now { margin-top: 32px; gap: 20px; }
+  .now-temp { font-size: 72px; }
+  .now-cond { font-size: 20px; }
+  .now-icon .wx-icon { width: 80px; height: 80px; }
+  .nowcast { margin-top: 28px; min-height: 0; }
+  .nowcast-head { padding: 20px; font-size: 18px; }
+  .nowcast-icon .wx-icon { width: 44px; height: 44px; }
+  .chart { height: 110px; }
+  .chart-axis { padding: 6px 20px 10px; font-size: 12px; }
+  .week { margin-top: 28px; }
+  /* Mobil: dagskortene blir en sveipbar rad. */
+  .days {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 96px;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0 var(--gutter) 4px;
+    scroll-padding: 0 var(--gutter);
+    scrollbar-width: none;
   }
-  .day-name { grid-area: name; }
-  .day-icon { grid-area: icon; }
-  .day-temps { grid-area: temps; }
-  .day-precip { grid-area: precip; }
-  .day-name span { font-size: .76rem; }
-  .day-wind { display: none; }
-  .day-icon .wx-icon { width: 38px; height: 38px; }
-  .day-temps { grid-template-columns: 3.2em 1fr 3.2em; gap: 5px; font-size: .88rem; }
-  .day-precip { font-size: .76rem; }
+  .days::-webkit-scrollbar { display: none; }
+  .day { scroll-snap-align: start; gap: 14px; padding: 20px 6px; }
+  .day-date { font-size: 20px; }
+  .day-icon .wx-icon { width: 48px; height: 48px; }
+  .day-temp { font-size: 24px; }
+  .footer { font-size: 14px; line-height: 1.5; }
 }
 
 @media (prefers-reduced-motion: reduce) {

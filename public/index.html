@@ -5,89 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bekkværet</title>
   <meta name="description" content="Bekkværet – nåværende vær, nedbør neste time og 7-dagersvarsel for Oslo og Trondheim.">
-  <meta name="theme-color" content="#16303f">
+  <meta name="theme-color" content="#1f1f1f">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-theme="cloudy">
-  <div class="backdrop" aria-hidden="true">
-    <svg class="stream" viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path d="M0 220 C 240 170, 420 270, 720 220 S 1200 170, 1440 215 L1440 320 L0 320 Z" />
-      <path d="M0 255 C 300 215, 520 300, 820 255 S 1260 220, 1440 250 L1440 320 L0 320 Z" />
-    </svg>
-  </div>
-
+<body>
   <main class="app">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Bekkværet, til forsiden">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#logo" /></svg>
-        <span>Bekkværet</span>
-      </a>
-      <div class="switch" role="radiogroup" aria-label="Velg by">
-        <span class="switch-thumb" aria-hidden="true"></span>
-      </div>
+      <a class="brand" href="./">Bekkværet</a>
+      <nav class="switch" role="radiogroup" aria-label="Velg by"></nav>
     </header>
 
-    <section class="now card" aria-labelledby="now-title" aria-live="polite">
-      <div class="now-head">
-        <h1 id="now-title"><span id="city-name">&nbsp;</span> akkurat nå</h1>
-        <p class="muted" id="updated">Henter vær …</p>
+    <section class="now" aria-labelledby="now-title" aria-live="polite">
+      <h1 id="now-title" class="sr-only"><span id="city-name">&nbsp;</span> akkurat nå</h1>
+      <div class="now-icon" id="now-icon"></div>
+      <div class="now-text">
+        <p class="now-temp"><span id="now-temp">–</span><span class="deg"> °C</span></p>
+        <p class="now-cond" id="now-cond">&nbsp;</p>
       </div>
-      <div class="now-main">
-        <div class="now-icon" id="now-icon"></div>
-        <div>
-          <p class="now-temp"><span id="now-temp">–</span><span class="deg"> °C</span></p>
-          <p class="now-cond" id="now-cond">&nbsp;</p>
-        </div>
-      </div>
-      <dl class="now-details">
-        <div><dt>Føles som</dt><dd id="now-feels">–</dd></div>
-        <div><dt>Vind</dt><dd id="now-wind">–</dd></div>
-        <div><dt>Luftfuktighet</dt><dd id="now-humidity">–</dd></div>
-        <div><dt>Nedbør neste time</dt><dd id="now-precip">–</dd></div>
-      </dl>
     </section>
 
     <section class="nowcast card" aria-labelledby="nowcast-title">
-      <div class="section-head">
-        <h2 id="nowcast-title">Nedbør den neste timen</h2>
-        <p class="muted small" id="nowcast-source"></p>
+      <div class="nowcast-head">
+        <div>
+          <h2 id="nowcast-title">&nbsp;</h2>
+          <p class="muted" id="nowcast-total">&nbsp;</p>
+        </div>
+        <div class="nowcast-icon" id="nowcast-icon"></div>
       </div>
-      <p class="nowcast-summary" id="nowcast-summary">&nbsp;</p>
       <div class="chart" id="nowcast-chart" role="img" aria-label="Nedbørsintensitet de neste 60 minuttene"></div>
-      <div class="chart-axis" aria-hidden="true">
-        <span>Nå</span><span>15 min</span><span>30 min</span><span>45 min</span><span>60 min</span>
-      </div>
-      <ul class="legend" aria-hidden="true">
-        <li><i class="lv1"></i>Lett</li>
-        <li><i class="lv2"></i>Moderat</li>
-        <li><i class="lv3"></i>Kraftig</li>
-      </ul>
+      <div class="chart-axis" aria-hidden="true"><span>Nå</span><span>30 min</span><span>60 min</span></div>
     </section>
 
-    <section class="week card" aria-labelledby="week-title">
-      <div class="section-head">
-        <h2 id="week-title">Neste 7 dager</h2>
-      </div>
+    <section class="week" aria-labelledby="week-title">
+      <h2 id="week-title" class="sr-only">Neste 7 dager</h2>
       <ol class="days" id="days"></ol>
     </section>
 
     <p class="error" id="error" role="alert" hidden></p>
 
     <footer class="footer">
-      Værdata fra <a href="https://www.met.no/" target="_blank" rel="noopener">Meteorologisk institutt</a>
+      Værdata levert av <a href="https://www.met.no/" target="_blank" rel="noopener">Meteorologisk institutt</a>
       (<a href="https://api.met.no/doc/License" target="_blank" rel="noopener">CC BY 4.0</a>).
-      Oppdateres automatisk hvert 5. minutt.
+      <span id="updated">Henter vær …</span>
     </footer>
   </main>
-
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="logo" viewBox="0 0 32 32">
-      <circle cx="21" cy="10" r="5.5" fill="#f6c453" />
-      <path d="M3 18c3.5-3 6.5-3 10 0s6.5 3 10 0 5.5-2.2 6-2.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
-      <path d="M3 25c3.5-3 6.5-3 10 0s6.5 3 10 0 5.5-2.2 6-2.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity=".55" />
-    </symbol>
-  </svg>
 
   <script type="module" src="js/main.js"></script>
 </body>

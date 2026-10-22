@@ -132,14 +132,3 @@ export function describe(symbol) {
   if (p.thunder) text += ' og torden';
   return text;
 }
-
-// Grov kategori brukt til bakgrunnstema.
-export function theme(symbol) {
-  const p = parse(symbol);
-  if (p.thunder) return 'storm';
-  if (p.precip === 'snow' || p.precip === 'sleet') return 'snow';
-  if (p.precip === 'rain') return 'rain';
-  if (p.base === 'fog' || p.base === 'cloudy') return 'cloudy';
-  return p.variant === 'night' ? 'night' : 'clear';
-}
-

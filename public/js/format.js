@@ -27,6 +27,9 @@ export function compass(deg) {
   return names[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 }
 
+// Dag i måneden fra en dagnøkkel, f.eks. «14».
+export const dayOfMonth = (key) => String(Number(key.slice(8, 10)));
+
 // «I dag» / «torsdag 22. oktober», «Lørdag» / «24. oktober».
 export function dayLabel(key, i) {
   const d = new Date(`${key}T12:00:00Z`);

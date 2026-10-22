@@ -19,9 +19,8 @@ function initialCity() {
 
 // ---------- Byvelger (bygges fra shared/cities.js) ----------
 const switchEl = document.querySelector('.switch');
-switchEl.style.setProperty('--n', KEYS.length);
 switchEl.insertAdjacentHTML('afterbegin', KEYS.map((key) =>
-  `<button type="button" role="radio" data-city="${key}" aria-checked="false">${CITIES[key].name}</button>`).join(''));
+  `<button type="button" role="radio" data-city="${key}" aria-checked="false">${CITIES[key].label ?? CITIES[key].name}</button>`).join(''));
 const buttons = [...switchEl.querySelectorAll('button')];
 
 function setCity(next, { focus = false } = {}) {
@@ -35,7 +34,6 @@ function setCity(next, { focus = false } = {}) {
     b.tabIndex = on ? 0 : -1;
     if (on && focus) b.focus();
   });
-  switchEl.style.setProperty('--i', KEYS.indexOf(city));
   load();
 }
 

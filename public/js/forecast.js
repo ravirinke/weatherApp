@@ -1,7 +1,7 @@
 // Ren logikk over METs data: nåvær, nedbør neste time og dagssammendrag.
 // Ingen DOM her, så modulen kan også brukes fra Node.
 import { parse } from './icons.js';
-import { cap, dayKey, localHour, mmHour } from './format.js';
+import { cap, dayKey, localHour } from './format.js';
 
 // Siste tidssteg som har startet, ellers det første.
 export function currentEntry(series, now) {
@@ -58,22 +58,24 @@ export function nowcastSteps(nc, now) {
     .map((e) => ({ time: new Date(e.time), rate: e.data.instant.details.precipitation_rate ?? 0 }));
 }
 
-// Én setning om nedbøren den neste timen.
+// Kort setning om nedbøren den neste timen. Mengden vises for seg (se nowcastTotal).
 export function nowcastSummary(steps, symbol) {
   const wet = steps.map((s) => s.rate >= 0.1);
-  const total = steps.reduce((sum, s) => sum + (s.rate * 5) / 60, 0);
   const word = { rain: 'regn', sleet: 'sludd', snow: 'snø' }[parse(symbol).precip] || 'nedbør';
 
   const firstWet = wet.indexOf(true);
   const firstDry = wet.indexOf(false);
-  if (firstWet === -1) return 'Opphold den neste timen.';
-  if (firstDry === -1) return `${cap(word)} hele den neste timen, i snitt ca. ${mmHour(total)}.`;
+  if (firstWet === -1) return 'Opphold den neste timen';
+  if (firstDry === -1) return `${cap(word)} den neste timen`;
   if (wet[0]) {
     const again = wet.indexOf(true, firstDry) !== -1;
-    return `${cap(word)} nå, opphold om ca. ${firstDry * 5} min${again ? ', men mer kommer senere' : ''}.`;
+    return `${cap(word)} nå, opphold om ca. ${firstDry * 5} min${again ? ', så mer' : ''}`;
   }
-  return `${cap(word)} om ca. ${firstWet * 5} min, i snitt ca. ${mmHour(total)} den neste timen.`;
+  return `${cap(word)} om ca. ${firstWet * 5} min`;
 }
+
+// Samlet nedbør (mm) de neste 60 minuttene.
+export const nowcastTotal = (steps) => steps.reduce((sum, s) => sum + (s.rate * 5) / 60, 0);
 
 // Sammendrag per lokal dag (Oslo-tid), fra i dag og 7 dager frem.
 export function buildDays(series, now) {

@@ -1,8 +1,8 @@
 // Alt som skriver til siden.
-import { icon, describe, theme } from './icons.js';
-import { clock, compass, dayLabel, degC, mmDay, mmHour, round } from './format.js';
+import { icon, describe } from './icons.js';
+import { clock, dayLabel, dayOfMonth, degC, mmHour, round } from './format.js';
 import {
-  buildDays, currentConditions, currentEntry, level, nowcastSteps, nowcastSummary, usableNowcast,
+  buildDays, currentConditions, currentEntry, level, nowcastSteps, nowcastSummary, nowcastTotal, usableNowcast,
 } from './forecast.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,6 +18,7 @@ export function render(data) {
   renderNow(series, nc, now);
   renderNowcast(series, nc, now);
   renderDays(series, now);
+  $('updated').textContent = `Oppdatert kl. ${clock(now)}, oppdateres hvert 5. minutt.`;
 }
 
 export function renderError(message) {
@@ -32,69 +33,87 @@ function renderNow(series, nc, now) {
   $('now-icon').innerHTML = icon(c.symbol, cond);
   $('now-temp').textContent = round(c.temp);
   $('now-cond').textContent = cond;
-  $('now-feels').textContent = degC(c.feels ?? c.temp);
-  $('now-wind').innerHTML = c.wind != null
-    ? `${round(c.wind)} m/s ${c.dir != null ? `<span class="wind-arrow" style="--deg:${c.dir}deg" title="Vind fra ${compass(c.dir)}">↓</span> ${compass(c.dir)}` : ''}` +
-      (c.gust != null && c.gust - c.wind >= 3 ? `<span class="sub">kast ${round(c.gust)} m/s</span>` : '')
-    : '–';
-  $('now-humidity').textContent = c.humidity != null ? `${round(c.humidity)} %` : '–';
-  $('now-precip').textContent = c.precip != null ? mmHour(c.precip) : '–';
-
-  document.body.dataset.theme = theme(c.symbol);
-  $('updated').textContent = `Oppdatert kl. ${clock(now)}`;
 }
 
 function renderNowcast(series, nc, now) {
-  const chart = $('nowcast-chart');
-  const summary = $('nowcast-summary');
+  const card = $('nowcast-chart').closest('.nowcast');
+  const fc = currentEntry(series, now).data.next_1_hours;
 
   if (!nc) {
-    const amount = currentEntry(series, now).data.next_1_hours?.details?.precipitation_amount ?? 0;
-    $('nowcast-source').textContent = 'Radar utilgjengelig – viser timesprognose';
-    summary.textContent = amount > 0 ? `Ventet ${mmHour(amount)} nedbør den neste timen.` : 'Ingen nedbør ventet den neste timen.';
-    chart.innerHTML = '';
-    chart.classList.add('empty');
+    const amount = fc?.details?.precipitation_amount ?? 0;
+    $('nowcast-title').textContent = amount > 0 ? 'Nedbør den neste timen' : 'Opphold den neste timen';
+    $('nowcast-total').textContent = `Totalt ${mmHour(amount)} · radar utilgjengelig`;
+    $('nowcast-icon').innerHTML = icon(fc?.summary?.symbol_code, describe(fc?.summary?.symbol_code));
+    showChart(card, null);
     return;
   }
 
+  const symbol = nc.timeseries[0].data.next_1_hours?.summary?.symbol_code;
   const steps = nowcastSteps(nc, now);
-  const text = nowcastSummary(steps, nc.timeseries[0].data.next_1_hours?.summary?.symbol_code);
-  summary.textContent = text;
-  $('nowcast-source').textContent = 'Radarvarsel, 5-minutters oppløsning';
+  const text = nowcastSummary(steps, symbol);
+  const total = nowcastTotal(steps);
+  const peak = Math.max(...steps.map((s) => s.rate));
+  const wet = steps.some((s) => level(s.rate) > 0);
+  const nb = (t) => t.replace(' ', ' '); // tall og enhet på samme linje
 
-  const maxLog = Math.log1p(8);
-  chart.classList.remove('empty');
-  chart.innerHTML = steps.map((s) => {
-    const lv = level(s.rate);
-    const h = lv === 0 ? 0 : 10 + 90 * Math.min(1, Math.log1p(s.rate) / maxLog);
-    const label = `kl. ${clock(s.time)}: ${lv === 0 ? 'opphold' : mmHour(s.rate)}`;
-    return `<div class="bar lv${lv}" title="${label}"><span style="height:${h.toFixed(1)}%"></span></div>`;
-  }).join('');
-  chart.setAttribute('aria-label', `Nedbør de neste 60 minuttene. ${text}`);
+  $('nowcast-title').textContent = text;
+  $('nowcast-total').textContent = wet ? `Totalt ${nb(mmHour(total))} · opptil ${nb(mmHour(peak))}` : `Totalt ${mmHour(0)}`;
+  $('nowcast-icon').innerHTML = icon(symbol, describe(symbol));
+  showChart(card, wet ? steps : null, `Nedbør de neste 60 minuttene: ${text}, opptil ${mmHour(peak)}.`);
+}
+
+// Grafen vises bare når det kommer nedbør den neste timen.
+function showChart(card, steps, label) {
+  card.classList.toggle('dry', !steps);
+  $('nowcast-chart').innerHTML = steps ? areaChart(steps) : '';
+  if (label) $('nowcast-chart').setAttribute('aria-label', label);
+}
+
+// Myk flatekurve over intensiteten (lineær skala mot timens kraftigste nedbør),
+// med stiplede referanselinjer i mm/t så mengden kan leses av.
+function areaChart(steps) {
+  const W = 780, H = 150;
+  const top = Math.max(1, Math.max(...steps.map((s) => s.rate)) * 1.15);
+  const clampY = (y) => Math.min(H, Math.max(0, y));
+  const pts = steps.map((s, i) => {
+    const f = level(s.rate) === 0 ? 0.02 : Math.max(0.04, s.rate / top);
+    return [(i / Math.max(1, steps.length - 1)) * W, H * (1 - f)];
+  });
+  // Catmull-Rom → kubiske Bézier-kurver (kontrollpunktene holdes innenfor grafen).
+  let d = `M0 ${H} L${pts[0][0]} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, clampY(p1[1] + (p2[1] - p0[1]) / 6)];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, clampY(p2[1] - (p3[1] - p1[1]) / 6)];
+    d += ` C${c1.map((n) => n.toFixed(1))} ${c2.map((n) => n.toFixed(1))} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  d += ` L${W} ${H} Z`;
+
+  const grid = ticks(top).map((t) =>
+    `<div class="gridline" style="bottom:${((t / top) * 100).toFixed(1)}%"><span>${mmHour(t)}</span></div>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}"/></svg>` +
+    `<div class="grid" aria-hidden="true">${grid}</div>`;
+}
+
+// «Pene» referanseverdier, høyst tre linjer, og ingen helt i toppen av grafen.
+function ticks(top) {
+  const step = [0.2, 0.5, 1, 2, 5, 10, 20, 50].find((s) => top / s <= 3) ?? 50;
+  const out = [];
+  for (let t = step; t < top * 0.92; t += step) out.push(Math.round(t * 10) / 10);
+  return out;
 }
 
 function renderDays(series, now) {
   const days = buildDays(series, now);
-  const wMin = Math.min(...days.map((d) => d.min));
-  const wMax = Math.max(...days.map((d) => d.max));
-  const span = Math.max(1, wMax - wMin);
 
   $('days').innerHTML = days.map((d, i) => {
     const { name, date } = dayLabel(d.key, i);
     const cond = describe(d.symbol);
-    const left = ((d.min - wMin) / span) * 100;
-    const width = Math.max(4, ((d.max - d.min) / span) * 100);
-    const p = Math.round(d.precip * 10) / 10;
-    return `<li class="day">
-      <div class="day-name"><strong>${name}</strong><span>${date}</span></div>
-      <div class="day-icon" title="${cond}">${icon(d.symbol, cond)}</div>
-      <div class="day-precip ${p > 0 ? 'wet' : ''}">${p > 0 ? mmDay(p) : '–'}</div>
-      <div class="day-wind">${round(d.wind)} m/s</div>
-      <div class="day-temps" aria-label="Laveste ${round(d.min)} grader, høyeste ${round(d.max)} grader">
-        <span class="t-min">${degC(d.min)}</span>
-        <span class="range"><i style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%"></i></span>
-        <span class="t-max ${d.max < 0 ? 'cold' : ''}">${degC(d.max)}</span>
-      </div>
+    const full = i <= 1 ? `${name}, ${date}` : `${name} ${date}`;
+    return `<li class="day" aria-label="${full}: ${cond}, høyeste ${degC(d.max)}, laveste ${degC(d.min)}">
+      <span class="day-date" title="${full}" aria-hidden="true">${dayOfMonth(d.key)}</span>
+      <span class="day-icon" title="${cond}" aria-hidden="true">${icon(d.symbol, cond)}</span>
+      <span class="day-temp" aria-hidden="true">${degC(d.max)}</span>
     </li>`;
   }).join('');
 }
