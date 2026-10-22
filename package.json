@@ -2,10 +2,11 @@
   "name": "bekkvaeret",
   "version": "1.0.0",
   "description": "Bekkværet – værmelding for Oslo og Trondheim med data fra Meteorologisk institutt",
-  "main": "server.js",
   "private": true,
+  "type": "module",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/index.js"
   },
   "engines": {
     "node": ">=18"

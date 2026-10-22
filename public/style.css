@@ -106,7 +106,9 @@ body.loading .card { opacity: .6; }
 .switch {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* --n (antall byer) og --i (valgt by) settes fra main.js. */
+  grid-template-columns: repeat(var(--n, 2), 1fr);
+  min-height: 46px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(0, 0, 0, .22);
@@ -131,13 +133,13 @@ body.loading .card { opacity: .6; }
 .switch-thumb {
   position: absolute;
   top: 4px; bottom: 4px; left: 4px;
-  width: calc(50% - 4px);
+  width: calc((100% - 8px) / var(--n, 2));
   border-radius: 999px;
   background: var(--ink);
   box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
+  transform: translateX(calc(100% * var(--i, 0)));
   transition: transform .3s cubic-bezier(.3, .7, .2, 1);
 }
-.switch[data-active="1"] .switch-thumb { transform: translateX(100%); }
 
 /* ---------- Kort ---------- */
 .card {
